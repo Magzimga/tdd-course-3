@@ -128,7 +128,9 @@ public:
 
     std::vector<std::string> GetRequests()
     {
-        return m_requests;
+        std::vector<std::string> result;
+        result.swap(m_requests);
+        return result;
     }
 };
 
@@ -149,9 +151,21 @@ public:
         GetWeatherForADay(server, date);
         return 0.0;
     }
-    virtual double GetMaximumTemperature(IWeatherServer& server, const std::string& date){return 0.0;}
-    virtual double GetAverageWindDirection(IWeatherServer& server, const std::string& date){return 0.0;}
-    virtual double GetMaximumWindSpeed(IWeatherServer& server, const std::string& date){return 0.0;}
+    virtual double GetMaximumTemperature(IWeatherServer& server, const std::string& date)
+    {
+        GetWeatherForADay(server, date);
+        return 0.0;
+    }
+    virtual double GetAverageWindDirection(IWeatherServer& server, const std::string& date)
+    {
+        GetWeatherForADay(server, date);
+        return 0.0;
+    }
+    virtual double GetMaximumWindSpeed(IWeatherServer& server, const std::string& date)
+    {
+        GetWeatherForADay(server, date);
+        return 0.0;
+    }
 private:
     std::vector<std::string> GetWeatherForADay(IWeatherServer& server, const std::string& date)
     {
@@ -187,4 +201,32 @@ TEST(WeatherClient, ClientSends4TimesForMinTemp)
     WeatherClient client;
     client.GetMinimumTemperature(server, s_testDate);
     ASSERT_EQ(expectedRequests, server.GetRequests());
+}
+TEST(WeatherClient, FourRequestsForAnyClientCall)
+{
+    std::vector<std::string> expectedRequests =
+    {
+        CreateRequest(s_testDate,s_3hours),
+        CreateRequest(s_testDate,s_9hours),
+        CreateRequest(s_testDate,s_15hours),
+        CreateRequest(s_testDate,s_21hour)
+    };
+    WeatherClient client;
+    FakeWeatherServer server;
+
+    client.GetAverageTemperature(server, s_testDate);
+    ASSERT_EQ(expectedRequests, server.GetRequests());
+
+    client.GetMaximumTemperature(server, s_testDate);
+    ASSERT_EQ(expectedRequests, server.GetRequests());
+
+    client.GetAverageWindDirection(server, s_testDate);
+    ASSERT_EQ(expectedRequests, server.GetRequests());
+
+    client.GetAverageWindDirection(server, s_testDate);
+    ASSERT_EQ(expectedRequests, server.GetRequests());
+
+    client.GetMaximumWindSpeed(server, s_testDate);
+    ASSERT_EQ(expectedRequests, server.GetRequests());
+
 }
