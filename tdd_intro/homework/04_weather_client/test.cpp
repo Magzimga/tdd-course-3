@@ -93,6 +93,12 @@ const std::string s_9hours = "09:00";
 const std::string s_15hours = "15:00";
 const std::string s_21hour = "21:00";
 
+Weather ParseWeather(const std::string& response)
+{
+    Weather weather;
+    weather.temperature = std::atoi(response.substr(0, response.find(";")).c_str());
+    return weather;
+}
 
 class FakeWeatherServer : public IWeatherServer
 {
@@ -229,4 +235,10 @@ TEST(WeatherClient, FourRequestsForAnyClientCall)
 
     client.GetMaximumWindSpeed(server, s_testDate);
     ASSERT_EQ(expectedRequests, server.GetRequests());
+}
+
+TEST(ParseResponce, TemperatureIs10For10_180_5)
+{
+    Weather response = ParseWeather("10;180;5");
+    ASSERT_EQ(10, response.temperature);
 }
