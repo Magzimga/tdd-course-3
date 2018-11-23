@@ -85,6 +85,7 @@ public:
 // 2. responce parsing. separate function
 // 3.
 
+using StringContainer = std::vector<std::string>;
 
 const std::string s_testDate = "31.08.2018";
 const std::string s_3hours = "03:00";
@@ -92,10 +93,11 @@ const std::string s_9hours = "09:00";
 const std::string s_15hours = "15:00";
 const std::string s_21hour = "21:00";
 
+
 class FakeWeatherServer : public IWeatherServer
 {
     std::map<std::string, std::string> m_data;
-    std::vector<std::string> m_requests;
+    StringContainer m_requests;
 public:
     FakeWeatherServer()
     {
@@ -126,9 +128,9 @@ public:
         return it->second;
     }
 
-    std::vector<std::string> GetRequests()
+    StringContainer GetRequests()
     {
-        std::vector<std::string> result;
+        StringContainer result;
         result.swap(m_requests);
         return result;
     }
@@ -167,10 +169,10 @@ public:
         return 0.0;
     }
 private:
-    std::vector<std::string> GetWeatherForADay(IWeatherServer& server, const std::string& date)
+    StringContainer GetWeatherForADay(IWeatherServer& server, const std::string& date)
     {
-        std::vector<std::string> weatherContainer;
-        const std::vector<std::string> timePoints = {s_3hours, s_9hours, s_15hours, s_21hour};
+        StringContainer weatherContainer;
+        const StringContainer timePoints = {s_3hours, s_9hours, s_15hours, s_21hour};
         for(size_t i = 0; i < timePoints.size(); ++i)
         {
             std::string request = CreateRequest(date, timePoints[i]);
@@ -179,6 +181,17 @@ private:
         return weatherContainer;
     }
 };
+
+StringContainer GenerateExpectedRequests(const std::string& date)
+{
+    return
+    {
+        CreateRequest(date,s_3hours),
+        CreateRequest(date,s_9hours),
+        CreateRequest(date,s_15hours),
+        CreateRequest(date,s_21hour)
+    };
+}
 
 TEST(WeatherClient, ClientCallsServerWith3hoursTimeForAvrTemperature)
 {
@@ -190,13 +203,7 @@ TEST(WeatherClient, ClientCallsServerWith3hoursTimeForAvrTemperature)
 
 TEST(WeatherClient, ClientSends4TimesForMinTemp)
 {
-    std::vector<std::string> expectedRequests =
-    {
-        CreateRequest(s_testDate,s_3hours),
-        CreateRequest(s_testDate,s_9hours),
-        CreateRequest(s_testDate,s_15hours),
-        CreateRequest(s_testDate,s_21hour)
-    };
+    StringContainer expectedRequests = GenerateExpectedRequests(s_testDate);
     FakeWeatherServer server;
     WeatherClient client;
     client.GetMinimumTemperature(server, s_testDate);
@@ -204,13 +211,7 @@ TEST(WeatherClient, ClientSends4TimesForMinTemp)
 }
 TEST(WeatherClient, FourRequestsForAnyClientCall)
 {
-    std::vector<std::string> expectedRequests =
-    {
-        CreateRequest(s_testDate,s_3hours),
-        CreateRequest(s_testDate,s_9hours),
-        CreateRequest(s_testDate,s_15hours),
-        CreateRequest(s_testDate,s_21hour)
-    };
+    StringContainer expectedRequests = GenerateExpectedRequests(s_testDate);
     WeatherClient client;
     FakeWeatherServer server;
 
@@ -228,5 +229,4 @@ TEST(WeatherClient, FourRequestsForAnyClientCall)
 
     client.GetMaximumWindSpeed(server, s_testDate);
     ASSERT_EQ(expectedRequests, server.GetRequests());
-
 }
