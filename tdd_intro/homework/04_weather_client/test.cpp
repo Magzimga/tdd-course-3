@@ -164,12 +164,12 @@ public:
     virtual double GetAverageTemperature(IWeatherServer& server, const std::string& date)
     {
         WeatherContainer weatherArray = GetWeatherForADay(server, date);
-        short sum = 0;
+        double sum = 0;
         for(size_t i = 0; i < weatherArray.size(); ++i)
         {
             sum += weatherArray[i].temperature;
         }
-        return static_cast<double>(sum)/weatherArray.size();
+        return sum/weatherArray.size();
     }
     virtual double GetMinimumTemperature(IWeatherServer& server, const std::string& date)
     {
@@ -183,8 +183,13 @@ public:
     }
     virtual double GetMaximumTemperature(IWeatherServer& server, const std::string& date)
     {
-        GetWeatherForADay(server, date);
-        return 0.0;
+        WeatherContainer weatherArray = GetWeatherForADay(server, date);
+        short max = weatherArray[0].temperature;
+        for(size_t i = 1; i < weatherArray.size(); ++i)
+        {
+            max = std::max(max, weatherArray[i].temperature);
+        }
+        return max;
     }
     virtual double GetAverageWindDirection(IWeatherServer& server, const std::string& date)
     {
@@ -293,4 +298,10 @@ TEST(WeatherClient, AverageTemperatureIs24For01_09_2018)
     FakeWeatherServer server;
     WeatherClient client;
     ASSERT_EQ(24, client.GetAverageTemperature(server, "01.09.2018"));
+}
+TEST(WeatherClient, MaxTemperatureIs33For31_08_2018)
+{
+    FakeWeatherServer server;
+    WeatherClient client;
+    ASSERT_EQ(33, client.GetMaximumTemperature(server, "31.08.2018"));
 }
