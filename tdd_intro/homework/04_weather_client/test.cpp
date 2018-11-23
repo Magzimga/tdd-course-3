@@ -163,8 +163,13 @@ class WeatherClient : public IWeatherClient
 public:
     virtual double GetAverageTemperature(IWeatherServer& server, const std::string& date)
     {
-        GetWeatherForADay(server, date);
-        return 0.0;
+        WeatherContainer weatherArray = GetWeatherForADay(server, date);
+        short sum = 0;
+        for(size_t i = 0; i < weatherArray.size(); ++i)
+        {
+            sum += weatherArray[i].temperature;
+        }
+        return static_cast<double>(sum)/weatherArray.size();
     }
     virtual double GetMinimumTemperature(IWeatherServer& server, const std::string& date)
     {
@@ -281,4 +286,11 @@ TEST(WeatherClient, MinTemperatureIs21For02_09_2018)
     FakeWeatherServer server;
     WeatherClient client;
     ASSERT_EQ(21, client.GetMinimumTemperature(server, "02.09.2018"));
+}
+
+TEST(WeatherClient, AverageTemperatureIs24For01_09_2018)
+{
+    FakeWeatherServer server;
+    WeatherClient client;
+    ASSERT_EQ(24, client.GetAverageTemperature(server, "01.09.2018"));
 }
