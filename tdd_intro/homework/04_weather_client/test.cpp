@@ -82,10 +82,11 @@ public:
 
 // Test list
 // done: 1. request creating(look from inside server if client call server with correct request
-// 2. responce parsing. separate function
-// 3.
+// done: 2. responce parsing. separate function
+// 3. Minium temperature. For different days
 
 using StringContainer = std::vector<std::string>;
+using WeatherContainer = std::vector<Weather>;
 
 const std::string s_testDate = "31.08.2018";
 const std::string s_3hours = "03:00";
@@ -93,10 +94,21 @@ const std::string s_9hours = "09:00";
 const std::string s_15hours = "15:00";
 const std::string s_21hour = "21:00";
 
+std::string RemoveFirstToken(std::string& str, const std::string& separator)
+{
+    size_t offset = str.find(separator);
+    std::string result = str.substr(0, offset);
+    str.erase(0, offset+1);
+    return result;
+}
+
 Weather ParseWeather(const std::string& response)
 {
     Weather weather;
-    weather.temperature = std::atoi(response.substr(0, response.find(";")).c_str());
+    std::string tmpResponse = response;
+    weather.temperature = std::atoi(RemoveFirstToken(tmpResponse, ";").c_str());
+    weather.windDirection = std::atoi(RemoveFirstToken(tmpResponse, ";").c_str());
+    weather.windSpeed = std::atof(RemoveFirstToken(tmpResponse, ";").c_str());
     return weather;
 }
 
@@ -156,8 +168,13 @@ public:
     }
     virtual double GetMinimumTemperature(IWeatherServer& server, const std::string& date)
     {
-        GetWeatherForADay(server, date);
-        return 0.0;
+        WeatherContainer weatherArray = GetWeatherForADay(server, date);
+        short min = weatherArray[0].temperature;
+        for(size_t i = 1; i < weatherArray.size(); ++i)
+        {
+            min = std::min(min, weatherArray[i].temperature);
+        }
+        return min;
     }
     virtual double GetMaximumTemperature(IWeatherServer& server, const std::string& date)
     {
@@ -175,14 +192,15 @@ public:
         return 0.0;
     }
 private:
-    StringContainer GetWeatherForADay(IWeatherServer& server, const std::string& date)
+    WeatherContainer GetWeatherForADay(IWeatherServer& server, const std::string& date)
     {
-        StringContainer weatherContainer;
+        WeatherContainer weatherContainer;
         const StringContainer timePoints = {s_3hours, s_9hours, s_15hours, s_21hour};
         for(size_t i = 0; i < timePoints.size(); ++i)
         {
             std::string request = CreateRequest(date, timePoints[i]);
-            weatherContainer.push_back(server.GetWeather(request));
+            std::string response = server.GetWeather(request);
+            weatherContainer.push_back(ParseWeather(response));
         }
         return weatherContainer;
     }
@@ -237,8 +255,30 @@ TEST(WeatherClient, FourRequestsForAnyClientCall)
     ASSERT_EQ(expectedRequests, server.GetRequests());
 }
 
+TEST(RemoveFirstToken, FirstIs10For10_180_5)
+{
+    std::string str("10;180;5");
+    std::string first = RemoveFirstToken(str, ";");
+    ASSERT_EQ("10", first);
+    ASSERT_EQ("180;5", str);
+}
+
 TEST(ParseResponce, TemperatureIs10For10_180_5)
 {
     Weather response = ParseWeather("10;180;5");
     ASSERT_EQ(10, response.temperature);
+}
+
+TEST(ParseResponce, WeatherFieldsFor10_180_5)
+{
+    Weather response = ParseWeather("10;180;5");
+    ASSERT_EQ(180, response.windDirection);
+    ASSERT_EQ(5, response.windSpeed);
+}
+
+TEST(WeatherClient, MinTemperatureIs21For02_09_2018)
+{
+    FakeWeatherServer server;
+    WeatherClient client;
+    ASSERT_EQ(21, client.GetMinimumTemperature(server, "02.09.2018"));
 }
