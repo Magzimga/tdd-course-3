@@ -169,5 +169,5 @@ TEST(Chat, ClientHandshakeStart)
     SocketWrapperMock socket;
     std::string nickname = "client";
     EXPECT_CALL(socket, Write("client:HELLO!")).Times(1);
-    ClientHandshake(socket, nickname);
+    //ClientHandshake(socket, nickname);
 }
