@@ -30,3 +30,57 @@ public:
     virtual void AddChocolate(int gram) = 0;
     virtual void AddCream(int gram) = 0;
 };
+
+enum CoffeType
+{
+    Americano,
+    Cappuchino,
+    Latte,
+    Marochino
+};
+
+enum CupSize
+{
+    Little,
+    Big
+};
+
+class SourceOfIngredientsMock : public ISourceOfIngredients
+{
+    // ISourceOfIngredients interface
+public:
+    MOCK_METHOD1(SetCupSize, void (int gram));
+    MOCK_METHOD2(AddWater, void (int gram, int temperature));
+    MOCK_METHOD1(AddSugar, void (int gram));
+    MOCK_METHOD1(AddCoffee, void (int gram));
+    MOCK_METHOD1(AddMilk, void (int gram));
+    MOCK_METHOD1(AddMilkFoam, void (int gram));
+    MOCK_METHOD1(AddChocolate, void (int gram));
+    MOCK_METHOD1(AddCream, void (int gram));
+};
+
+class CoffeMachine
+{
+public:
+    void MakeSomeCoffe(ISourceOfIngredients& ingredientsSource, CoffeType type, CupSize size)
+    {
+        ingredientsSource.SetCupSize(140);
+    }
+};
+
+TEST(CoffeMachine, SetsRightCupSizeForBig)
+{
+    SourceOfIngredientsMock source;
+    CoffeMachine coffeMachine;
+    EXPECT_CALL(source, SetCupSize(140)).Times(1);
+    coffeMachine.MakeSomeCoffe(source, Americano, Big);
+}
+TEST(CoffeMachine, SetsRightCupSizeForLittle)
+{
+    SourceOfIngredientsMock source;
+    CoffeMachine coffeMachine;
+    EXPECT_CALL(source, SetCupSize(100)).Times(1);
+    coffeMachine.MakeSomeCoffe(source, Americano, Little);
+}
+
+
