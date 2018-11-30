@@ -41,8 +41,20 @@ enum CoffeType
 
 enum CupSize
 {
-    Little,
-    Big
+    Little = 100,
+    Big = 140
+};
+
+struct CoffeeReceipt
+{
+int coffe = 0;
+int sugar = 0;
+int milk = 0;
+int milkFoam = 0;
+int chocolate = 0;
+int cream = 0;
+int waterTemp = 0;
+bool AddWater = true;
 };
 
 class SourceOfIngredientsMock : public ISourceOfIngredients
@@ -64,7 +76,8 @@ class CoffeMachine
 public:
     void MakeSomeCoffe(ISourceOfIngredients& ingredientsSource, CoffeType type, CupSize size)
     {
-        ingredientsSource.SetCupSize(140);
+        ingredientsSource.SetCupSize(static_cast<int>(size));
+        ingredientsSource.AddCoffee(static_cast<int>(size)/3);
     }
 };
 
@@ -83,4 +96,12 @@ TEST(CoffeMachine, SetsRightCupSizeForLittle)
     coffeMachine.MakeSomeCoffe(source, Americano, Little);
 }
 
+TEST(CoffeMachine, AmericanoLittleAdd3GgramsOfCoffe)
+{
+    SourceOfIngredientsMock source;
+    CoffeMachine coffeMachine;
+    EXPECT_CALL(source, SetCupSize(100)).Times(1);
+    EXPECT_CALL(source, AddCoffee(33)).Times(1);
+    coffeMachine.MakeSomeCoffe(source, Americano, Little);
+}
 
