@@ -96,7 +96,7 @@ TEST(CoffeMachine, SetsRightCupSizeForLittle)
     coffeMachine.MakeSomeCoffe(source, Americano, Little);
 }
 
-TEST(CoffeMachine, AmericanoLittleAdd3GgramsOfCoffe)
+TEST(CoffeMachine, AmericanoLittleAdd33GgramsOfCoffe)
 {
     SourceOfIngredientsMock source;
     CoffeMachine coffeMachine;
@@ -104,4 +104,11 @@ TEST(CoffeMachine, AmericanoLittleAdd3GgramsOfCoffe)
     EXPECT_CALL(source, AddCoffee(33)).Times(1);
     coffeMachine.MakeSomeCoffe(source, Americano, Little);
 }
-
+TEST(CoffeMachine, AmericanoLittleAddWaterToFullCup)
+{
+    SourceOfIngredientsMock source;
+    CoffeMachine coffeMachine;
+    EXPECT_CALL(source, SetCupSize(100)).Times(1);
+    EXPECT_CALL(source, AddWater(67, 60)).Times(1);
+    coffeMachine.MakeSomeCoffe(source, Americano, Little);
+}
