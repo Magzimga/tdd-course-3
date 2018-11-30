@@ -47,14 +47,14 @@ enum CupSize
 
 struct CoffeeReceipt
 {
-int coffe = 0;
-int sugar = 0;
-int milk = 0;
-int milkFoam = 0;
-int chocolate = 0;
-int cream = 0;
+int coffePart = 0;
+int sugarPart = 0;
+int milkPart = 0;
+int milkFoamPart = 0;
+int chocolatePart = 0;
+int creamPart = 0;
 int waterTemp = 0;
-bool AddWater = true;
+bool addWater = true;
 };
 
 class SourceOfIngredientsMock : public ISourceOfIngredients
@@ -76,8 +76,16 @@ class CoffeMachine
 public:
     void MakeSomeCoffe(ISourceOfIngredients& ingredientsSource, CoffeType type, CupSize size)
     {
-        ingredientsSource.SetCupSize(static_cast<int>(size));
-        ingredientsSource.AddCoffee(static_cast<int>(size)/3);
+        int remainingSize = static_cast<int>(size);
+        ingredientsSource.SetCupSize(remainingSize);
+
+        CoffeeReceipt receipt;
+        receipt.coffePart = 3;
+        receipt.waterTemp = 60;
+
+        ingredientsSource.AddCoffee(remainingSize/receipt.coffePart);
+        remainingSize -= remainingSize/receipt.coffePart;
+        ingredientsSource.AddWater(remainingSize, receipt.waterTemp);
     }
 };
 
@@ -111,4 +119,13 @@ TEST(CoffeMachine, AmericanoLittleAddWaterToFullCup)
     EXPECT_CALL(source, SetCupSize(100)).Times(1);
     EXPECT_CALL(source, AddWater(67, 60)).Times(1);
     coffeMachine.MakeSomeCoffe(source, Americano, Little);
+}
+TEST(CoffeMachine, AmericanoBigFullReceipt)
+{
+    SourceOfIngredientsMock source;
+    CoffeMachine coffeMachine;
+    EXPECT_CALL(source, SetCupSize(140)).Times(1);
+    EXPECT_CALL(source, AddCoffee(35)).Times(1);
+    EXPECT_CALL(source, AddWater(105, 60)).Times(1);
+    coffeMachine.MakeSomeCoffe(source, Americano, Big);
 }
