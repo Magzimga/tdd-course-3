@@ -16,7 +16,8 @@ Implement worked coffee machine using ISourceOfIngredients to controll the proce
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
+#include <map>
+#include <utility>
 class ISourceOfIngredients
 {
 public:
@@ -43,6 +44,15 @@ enum CupSize
 {
     Little = 100,
     Big = 140
+};
+
+struct CoffeeOrder
+{
+    CupSize size = Little;
+    CoffeType type = Americano;
+    CoffeeOrder(CoffeType type_in, CupSize size_in)
+        :size(size_in), type(type_in)
+    {}
 };
 
 struct CoffeeReceipt
@@ -79,9 +89,24 @@ public:
         int remainingSize = static_cast<int>(size);
         ingredientsSource.SetCupSize(remainingSize);
 
-        CoffeeReceipt receipt;
-        receipt.coffePart = 3;
-        receipt.waterTemp = 60;
+        std::map<CoffeeOrder, CoffeeReceipt> receiptBook;
+        CoffeeReceipt americano;
+        americano.coffePart = 33;
+        americano.waterTemp = 60;
+        CoffeeOrder order
+        order.type = Americano;
+        order.size = Little;
+        receiptBook.insert(std::make_pair(CoffeeOrder(Americano, Little), americano));
+
+        order.type = Americano;
+        order.size = Big;
+        CoffeeReceipt americanoBig;
+        americanoBig.coffePart = 35;
+        americanoBig.waterTemp = 60;
+        receiptBook.insert({order, americanoBig});
+
+
+        CoffeeReceipt receipt = receiptBook[{type, size}];
 
         ingredientsSource.AddCoffee(remainingSize/receipt.coffePart);
         remainingSize -= remainingSize/receipt.coffePart;
